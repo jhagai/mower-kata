@@ -1,0 +1,6 @@
+/.nyc_output/
+/dist/
+/node_modules/
+/coverage.lcov
+/npm-debug.log
+/.idea/
