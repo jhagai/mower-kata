@@ -2,7 +2,7 @@ enum OrientationEnum {
     NORTH,
     SOUTH,
     EAST,
-    WEST
+    WEST,
 }
 
-export {OrientationEnum}
+export {OrientationEnum};

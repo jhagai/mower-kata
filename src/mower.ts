@@ -1,12 +1,12 @@
-import {Lawn} from "./lawn";
 import {InstructionEnum} from "./instruction-enum";
+import {ILawn} from "./lawn";
 import {OrientationEnum} from "./orientation-enum";
 
 class Mower {
-    constructor(private _x: number, private _y: number, private _orientation: OrientationEnum, private _lawn: Lawn) {
+    constructor(private _x: number, private _y: number, private _orientation: OrientationEnum, private _lawn: ILawn) {
     }
 
-    step(instruction: InstructionEnum) {
+    public step(instruction: InstructionEnum) {
         switch (instruction) {
             case InstructionEnum.LEFT:
                 this.left();
@@ -88,4 +88,4 @@ class Mower {
     }
 }
 
-export {Mower}
+export {Mower};

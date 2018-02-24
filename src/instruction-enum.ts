@@ -1,7 +1,7 @@
 enum InstructionEnum {
     LEFT,
     RIGHT,
-    FORWARD
+    FORWARD,
 }
 
-export {InstructionEnum}
+export {InstructionEnum};

@@ -1,6 +1,6 @@
-interface Lawn {
-    width:number;
-    height:number;
+interface ILawn {
+    width: number;
+    height: number;
 }
 
-export {Lawn}
+export {ILawn};
