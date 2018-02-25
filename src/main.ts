@@ -1,27 +1,45 @@
-import {ILawn} from "./lawn";
-import {Mower} from "./mower";
+import {checkInput, InputErrorEnum} from "./check-input";
+import {ConfigurationParser, orientationMapper} from "./configuration-parser-service";
+import {InstructionEnum} from "./instruction-enum";
 import {OrientationEnum} from "./orientation-enum";
+import {writeLine} from "./util/stdout-writer-util";
 
-/*
-const readline = require('readline');
-const fs = require('fs');
+const orientationEnumToLabel = new Map<OrientationEnum, string>();
 
-const rl = readline.createInterface({
-    input: fs.createReadStream('sample.txt'),
-    crlfDelay: Infinity
-});
+orientationMapper.forEach(
+    function (value, key) {
+        this.set(value, key);
+    }, orientationEnumToLabel);
 
-rl.on('line', (line) => {
-    console.log(`Line from file: ${line}`);
-});*/
+const args = process.argv.slice(2);
+const filePath = args[0];
 
-// print process.argv
-// process.argv.forEach(() => (val: string, index: number, array: string[]){});
+const readable = checkInput(filePath);
 
-const lawn: ILawn = {
-    height: 5,
-    width: 5,
-};
-
-const mower: Mower = new Mower(0, 0, OrientationEnum.NORTH, lawn);
-// console.log(`${mower.x}${mower.y}${mower.orientation}`);
+switch (readable) {
+    case InputErrorEnum.MISSING_FILE_ARG:
+        writeLine("One single argument representing a path to file is required.");
+        process.exit(1);
+        break;
+    case InputErrorEnum.FILE_DOES_NOT_EXIST:
+        writeLine(`Provided file ${filePath} could not be found.`);
+        process.exit(2);
+        break;
+    case InputErrorEnum.FILE_NOT_READABLE:
+        writeLine(`Current user does not seem to have read access to provided file ${filePath}.`);
+        process.exit(3);
+        break;
+    default:
+        const configurationParser = new ConfigurationParser(readable);
+        configurationParser.parse(
+            (mower, mowerInstructions) => {
+                mowerInstructions.forEach(
+                    (instruction: InstructionEnum) => {
+                        if (mower) {
+                            mower.step(instruction);
+                        }
+                    },
+                );
+                writeLine(`${mower.x}${mower.y}${orientationEnumToLabel.get(mower.orientation)}`);
+            });
+}

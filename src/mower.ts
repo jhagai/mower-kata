@@ -3,6 +3,15 @@ import {ILawn} from "./lawn";
 import {OrientationEnum} from "./orientation-enum";
 
 class Mower {
+
+    public static newMower(x: number, y: number, orientation: OrientationEnum, lawn: ILawn): Mower | null {
+        let result = null;
+        if (x >= 0 && x <= lawn.width && y >= 0 && y <= lawn.height) {
+            result = new Mower(x, y, orientation, lawn);
+        }
+        return result;
+    }
+
     constructor(private _x: number, private _y: number, private _orientation: OrientationEnum, private _lawn: ILawn) {
     }
 
@@ -37,8 +46,12 @@ class Mower {
                 nextY -= 1;
                 break;
         }
-        this._x = nextX;
-        this._y = nextY;
+        if (nextX >= 0 && nextX <= this._lawn.width) {
+            this._x = nextX;
+        }
+        if (nextY >= 0 && nextY <= this._lawn.height) {
+            this._y = nextY;
+        }
     }
 
     private left() {
