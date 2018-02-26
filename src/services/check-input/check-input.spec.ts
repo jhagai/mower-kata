@@ -1,8 +1,8 @@
 import {expect} from "chai";
 import sinon, {SinonStub} from "sinon";
 import {Readable} from "stream";
-import {checkInput, InputErrorEnum} from "../src/check-input";
-import * as fs from "../src/file-system-service";
+import {checkInput, InputErrorEnum} from "./check-input";
+import * as fs from "../file-system-service";
 
 describe("checkInput", () => {
 

@@ -1,8 +1,8 @@
 import {assert, expect} from "chai";
-import {InstructionEnum} from "../src/instruction-enum";
-import {ILawn} from "../src/lawn";
-import {Mower} from "../src/mower";
-import {OrientationEnum} from "../src/orientation-enum";
+import {InstructionEnum} from "../instruction-enum";
+import {OrientationEnum} from "../orientation-enum";
+import {ILawn} from "../lawn";
+import {Mower} from "./mower";
 
 const lawn: ILawn = {
     height: 2,

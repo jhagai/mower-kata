@@ -1,8 +1,12 @@
 import {Readable} from "stream";
-import {checkInput, InputErrorEnum} from "./check-input";
-import {ConfigurationParser, orientationMapper} from "./configuration-parser-service";
-import {InstructionEnum} from "./instruction-enum";
-import {OrientationEnum} from "./orientation-enum";
+import {InstructionEnum} from "./entites/instruction-enum";
+import {OrientationEnum} from "./entites/orientation-enum";
+import {checkInput, InputErrorEnum} from "./services/check-input/check-input";
+import {
+    ConfigurationParser,
+    orientationMapper,
+    ParserErrorTypeEnum,
+} from "./services/configuration-parser/configuration-parser-service";
 import {writeLine} from "./util/stdout-writer-util";
 
 // Processing input to extract the file path.
@@ -49,5 +53,22 @@ function processFile(readableStream: Readable) {
                 },
             );
             writeLine(`${mower.x}${mower.y}${orientationEnumToLabel.get(mower.orientation)}`);
+        }, (errorType: ParserErrorTypeEnum, lineNumber: number) => {
+            let exitStatus = 0;
+            switch (errorType) {
+                case ParserErrorTypeEnum.LAWN:
+                    exitStatus = 4;
+                    writeLine(`Line ${lineNumber} - An error occurred while parsing lawn data.`);
+                    break;
+                case ParserErrorTypeEnum.MOWER:
+                    exitStatus = 5;
+                    writeLine(`Line ${lineNumber} - An error occurred while parsing mower initial data.`);
+                    break;
+                case ParserErrorTypeEnum.INSTRUCTION:
+                    exitStatus = 6;
+                    writeLine(`Line ${lineNumber} - An error occurred while parsing mower instructions.`);
+                    break;
+            }
+            process.exit(exitStatus);
         });
 }

@@ -1,39 +1,40 @@
 import {assert, expect} from "chai";
 import sinon from "sinon";
 import {Readable, ReadableOptions} from "stream";
-import {ConfigurationParser, orientationMapper} from "../src/configuration-parser-service";
-import {InstructionEnum} from "../src/instruction-enum";
-import {Mower} from "../src/mower";
-import {ILawn} from "../src/lawn";
-import {OrientationEnum} from "../src/orientation-enum";
-import * as fs from "../src/file-system-service";
+import {InstructionEnum} from "../../entites/instruction-enum";
+import {ILawn} from "../../entites/lawn";
+import {Mower} from "../../entites/mower/mower";
+import {OrientationEnum} from "../../entites/orientation-enum";
+import {ConfigurationParser, orientationMapper} from "./configuration-parser-service";
+
+class SourceWrapper extends Readable {
+    constructor(private data: string[]) {
+        super({});
+    }
+
+    public _read(size: number): void {
+        this.data.forEach((d: string) => this.push(d));
+        this.push(null);
+    }
+}
 
 describe("ConfigurationParser", () => {
     describe("parse", () => {
         it("should execute callback function whenever mower instruction list is available.", (done) => {
-            class SourceWrapper extends Readable {
-                constructor(opt?: ReadableOptions) {
-                    super(opt);
-                }
 
-                public _read(size: number): void {
-                    this.push("55\n");
-                    this.push("12N\n");
-                    this.push("LRF\n");
-                    this.push("33E\n");
-                    this.push("FRL\n");
-                    this.push(null);
-                }
-            }
+            const data = [
+                "55\n",
+                "12N\n",
+                "LRF\n",
+                "33E\n",
+                "FRL\n",
+            ];
 
-            const readable = new SourceWrapper();
-
+            const readable = new SourceWrapper(data);
             const configurationParser = new ConfigurationParser(readable);
-
             const sinonSpy = sinon.spy();
-
+            const sinonErrorSpy = sinon.spy();
             let callNumber = 0;
-
             const mowerInstructionsCallback = (mower: Mower, mowerInstructions: InstructionEnum[]) => {
 
                 sinonSpy();
@@ -55,13 +56,88 @@ describe("ConfigurationParser", () => {
                         break;
                 }
             };
-            configurationParser.parse(mowerInstructionsCallback).on("close", () => {
-                assert.isTrue(sinonSpy.calledTwice);
-                done();
-            });
+            configurationParser.parse(
+                mowerInstructionsCallback,
+                sinonErrorSpy,
+                () => {
+                    assert.isTrue(sinonSpy.calledTwice);
+                    assert.isTrue(sinonErrorSpy.notCalled);
+                    done();
+                });
+        });
+
+        it("should stop parsing on lawn error.", (done) => {
+
+            const data = [
+                "55A\n",
+                "12N\n",
+                "LRF\n",
+                "33E\n",
+                "FRL\n",
+            ];
+
+            const readable = new SourceWrapper(data);
+            const configurationParser = new ConfigurationParser(readable);
+            const sinonSpy = sinon.spy();
+            const sinonErrorSpy = sinon.spy();
+            configurationParser.parse(
+                sinonSpy,
+                sinonErrorSpy,
+                () => {
+                    assert.isTrue(sinonSpy.notCalled);
+                    assert.isTrue(sinonErrorSpy.calledOnce);
+                    done();
+                });
+        });
+
+        it("should stop parsing on mower error.", (done) => {
+
+            const data = [
+                "55\n",
+                "12NA\n",
+                "LRF\n",
+                "33E\n",
+                "FRL\n",
+            ];
+
+            const readable = new SourceWrapper(data);
+            const configurationParser = new ConfigurationParser(readable);
+            const sinonSpy = sinon.spy();
+            const sinonErrorSpy = sinon.spy();
+            configurationParser.parse(
+                sinonSpy,
+                sinonErrorSpy,
+                () => {
+                    assert.isTrue(sinonSpy.notCalled);
+                    assert.isTrue(sinonErrorSpy.calledOnce);
+                    done();
+                });
+        });
+
+        it("should stop parsing on mower instruction error.", (done) => {
+
+            const data = [
+                "55\n",
+                "12N\n",
+                "LR1\n",
+                "33E\n",
+                "FRL\n",
+            ];
+
+            const readable = new SourceWrapper(data);
+            const configurationParser = new ConfigurationParser(readable);
+            const sinonSpy = sinon.spy();
+            const sinonErrorSpy = sinon.spy();
+            configurationParser.parse(
+                sinonSpy,
+                sinonErrorSpy,
+                () => {
+                    assert.isTrue(sinonSpy.notCalled);
+                    assert.isTrue(sinonErrorSpy.calledOnce);
+                    done();
+                });
         });
     });
-
     describe("parseLawn", () => {
         it("should return null when called with wrong paramters", () => {
             const parsedLawn = ConfigurationParser.parseLawn("AB");

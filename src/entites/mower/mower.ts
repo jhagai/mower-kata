@@ -1,6 +1,6 @@
-import {InstructionEnum} from "./instruction-enum";
-import {ILawn} from "./lawn";
-import {OrientationEnum} from "./orientation-enum";
+import {InstructionEnum} from "../instruction-enum";
+import {ILawn} from "../lawn";
+import {OrientationEnum} from "../orientation-enum";
 
 class Mower {
 

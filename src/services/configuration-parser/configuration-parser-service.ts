@@ -1,10 +1,9 @@
 import {createInterface, ReadLine} from "readline";
 import {Readable} from "stream";
-import {InstructionEnum} from "./instruction-enum";
-import {ILawn} from "./lawn";
-import {Mower} from "./mower";
-import {OrientationEnum} from "./orientation-enum";
-import {writeLine} from "./util/stdout-writer-util";
+import {InstructionEnum} from "../../entites/instruction-enum";
+import {ILawn} from "../../entites/lawn";
+import {Mower} from "../../entites/mower/mower";
+import {OrientationEnum} from "../../entites/orientation-enum";
 
 const LAWN_REGEX = /^[1-9]{2}$/
 const INITIAL_MOWER_REGEX = /^[1-9]{2}[NSEW]$/
@@ -21,11 +20,17 @@ instructionMapper.set("L", InstructionEnum.LEFT);
 instructionMapper.set("R", InstructionEnum.RIGHT);
 instructionMapper.set("F", InstructionEnum.FORWARD);
 
-enum ParserStatus {
+enum ParserStatusEnum {
     LAWN,
     MOWER_INITIAL,
     MOWER_INSTRUCTIONS,
     ERROR,
+}
+
+export enum ParserErrorTypeEnum {
+    LAWN,
+    MOWER,
+    INSTRUCTION,
 }
 
 export class ConfigurationParser {
@@ -48,7 +53,7 @@ export class ConfigurationParser {
         if (INITIAL_MOWER_REGEX.test(line)) {
             const x = parseInt(line.charAt(0), 10);
             const y = parseInt(line.charAt(1), 10);
-            const orientation = orientationMapper.get(line.charAt(2))
+            const orientation = orientationMapper.get(line.charAt(2));
             if (orientation != null) {
                 result = Mower.newMower(x, y, orientation, lawn);
             }
@@ -70,7 +75,7 @@ export class ConfigurationParser {
         return result;
     }
 
-    private status = ParserStatus.LAWN;
+    private status = ParserStatusEnum.LAWN;
     private lawn: ILawn;
     private mower: Mower;
     private lineNumber = 0;
@@ -78,61 +83,84 @@ export class ConfigurationParser {
     constructor(private readSteam: Readable) {
     }
 
-    public parse(onMowerInstructions: (mower: Mower, mowerInstructions: InstructionEnum[]) => void): ReadLine {
+    public parse(onMowerInstructions: (mower: Mower, mowerInstructions: InstructionEnum[]) => void,
+                 onError?: (errorType: ParserErrorTypeEnum, lineNumber: number) => void,
+                 onDone?: () => void) {
 
         const rl: ReadLine = createInterface({
             input: this.readSteam,
         });
 
+        let error: ParserErrorTypeEnum | null = null;
         rl.on("line", (line) => {
             this.lineNumber++;
             switch (this.status) {
-                case ParserStatus.LAWN:
-                    this.handleLawn(line);
+                case ParserStatusEnum.LAWN:
+                    if (!this.handleLawn(line)) {
+                        error = ParserErrorTypeEnum.LAWN;
+                    }
                     break;
-                case ParserStatus.MOWER_INITIAL:
-                    this.handleMower(line);
+                case ParserStatusEnum.MOWER_INITIAL:
+                    if (!this.handleMower(line)) {
+                        error = ParserErrorTypeEnum.MOWER;
+                    }
                     break;
-                case ParserStatus.MOWER_INSTRUCTIONS:
-                    this.handleInstructions(line, onMowerInstructions);
+                case ParserStatusEnum.MOWER_INSTRUCTIONS:
+                    if (!this.handleInstructions(line, onMowerInstructions)) {
+                        error = ParserErrorTypeEnum.INSTRUCTION;
+                    }
                     break;
             }
+            if (error !== null) {
+                this.status = ParserStatusEnum.ERROR;
+                if (onError) {
+                    this.status = ParserStatusEnum.ERROR;
+                    onError(error, this.lineNumber);
+                }
+                rl.close();
+            }
         });
-        return rl;
+        rl.on("close", () => {
+            if (onDone) {
+                onDone();
+            }
+        });
     }
 
     private handleInstructions(line: string,
-                               onMowerInstructions: (mower: Mower, mowerInstructions: InstructionEnum[]) => void) {
+                               onMowerInstructions: (mower: Mower,
+                                                     mowerInstructions: InstructionEnum[]) => void): boolean {
+        let result = false;
         const parseMowerInstructions = ConfigurationParser.parseMowerInstructions(line);
         if (parseMowerInstructions) {
+            result = true;
             onMowerInstructions(this.mower, parseMowerInstructions);
-            this.status = ParserStatus.MOWER_INITIAL;
-        } else {
-            writeLine(`Line ${line} - An error occurred while parsing mower instructions.`);
-            this.status = ParserStatus.ERROR;
+            this.status = ParserStatusEnum.MOWER_INITIAL;
         }
+
+        return result;
     }
 
-    private handleMower(line: string) {
+    private handleMower(line: string): boolean {
+        let result: boolean = false;
         const mower = ConfigurationParser.parseMower(line, this.lawn);
         if (mower) {
+            result = true;
             this.mower = mower;
-            this.status = ParserStatus.MOWER_INSTRUCTIONS;
-        } else {
-            writeLine(`Line ${this.lineNumber} - An error occurred while parsing mower initial data.`);
-            this.status = ParserStatus.ERROR;
+            this.status = ParserStatusEnum.MOWER_INSTRUCTIONS;
         }
+        return result;
 
     }
 
-    private handleLawn(line: string) {
+    private handleLawn(line: string): boolean {
+        let result: boolean = false;
         const lawn = ConfigurationParser.parseLawn(line);
         if (lawn) {
+            result = true;
             this.lawn = lawn;
-            this.status = ParserStatus.MOWER_INITIAL;
-        } else {
-            writeLine(`Line ${this.lineNumber} - An error occurred while parsing lawn data.`);
-            this.status = ParserStatus.ERROR;
+            this.status = ParserStatusEnum.MOWER_INITIAL;
         }
+        return result;
     }
 }

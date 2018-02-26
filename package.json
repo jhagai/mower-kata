@@ -7,8 +7,9 @@
     "tsc": "tsc",
     "start": "tsc && node ./dist/main.js",
     "lint": "tslint \"src/**/*.ts\" --project tsconfig.json",
-    "test": "nyc mocha -r ts-node/register --require source-map-support/register --recursive test/**/*.spec.ts",
-    "coverage": "npm test && nyc report --reporter=text-lcov > coverage.lcov && codecov"
+    "test": "nyc mocha -r ts-node/register --require source-map-support/register --recursive src/**/*.spec.ts",
+    "coverage": "npm test && nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "coverage-html": "npm test && nyc report --reporter=html"
   },
   "nyc": {
     "extension": [
@@ -16,6 +17,9 @@
     ],
     "include": [
       "src/**/*.ts"
+    ],
+    "exclude": [
+      "src/**/*.spec.ts"
     ],
     "all": true
   },

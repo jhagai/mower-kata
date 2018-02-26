@@ -1,6 +1,6 @@
 import {ReadStream} from "fs";
 import {Readable} from "stream";
-import * as fs from "./file-system-service";
+import * as fs from "../file-system-service";
 
 export enum InputErrorEnum {
     MISSING_FILE_ARG,
