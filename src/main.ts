@@ -43,6 +43,7 @@ function processFile(readableStream: Readable) {
         }, orientationEnumToLabel);
     const configurationParser = new ConfigurationParser(readableStream);
     // Process the file line by line
+    let exitStatus = 0;
     configurationParser.parse(
         (mower, mowerInstructions) => {
             mowerInstructions.forEach(
@@ -54,7 +55,6 @@ function processFile(readableStream: Readable) {
             );
             writeLine(`${mower.x}${mower.y}${orientationEnumToLabel.get(mower.orientation)}`);
         }, (errorType: ParserErrorTypeEnum, lineNumber: number) => {
-            let exitStatus = 0;
             switch (errorType) {
                 case ParserErrorTypeEnum.LAWN:
                     exitStatus = 4;
@@ -69,6 +69,5 @@ function processFile(readableStream: Readable) {
                     writeLine(`Line ${lineNumber} - An error occurred while parsing mower instructions.`);
                     break;
             }
-            process.exit(exitStatus);
-        });
+        }, () => process.exit(exitStatus));
 }
