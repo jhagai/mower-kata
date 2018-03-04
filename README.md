@@ -14,13 +14,10 @@ The application's entry point is ``` main.ts ```.
 It works a follow:
 1. Validate read access to the input file.
 2. In case of error, log and exit
-3. In case of success parse the file line by line (streaming) and output mower's final position when instruction line is done processing.
+3. In case of success parse the file line by line (streaming) and output each mower's final position when instruction line is done processing.
 
 ## Process return value
 * 0: Success
-* 1: Missing input file
-* 2: Provided file does not exist
-* 3: File is not readable for current process
-* 4: Lawn line format is not compliant
-* 5: Mower initialization format is not compliant
-* 6: Instruction format is not compliant
+* 1: An error occured while trying to open input file
+* 2: An error occurred while parsing the input file (data is not properly formatted).
+* 3: An unknown technical error was raised during the process.
