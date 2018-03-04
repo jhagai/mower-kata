@@ -1,10 +1,10 @@
 import {assert, expect} from "chai";
 import sinon from "sinon";
 import {Readable, ReadableOptions} from "stream";
-import {InstructionEnum} from "../../entites/instruction-enum";
-import {ILawn} from "../../entites/lawn";
-import {Mower} from "../../entites/mower/mower";
-import {OrientationEnum} from "../../entites/orientation-enum";
+import {InstructionEnum} from "../../../entites/instruction-enum";
+import {ILawn} from "../../../entites/lawn";
+import {Mower} from "../../../entites/mower/mower";
+import {OrientationEnum} from "../../../entites/orientation-enum";
 import {ConfigurationParser, orientationMapper} from "./configuration-parser-service";
 
 class SourceWrapper extends Readable {
@@ -143,7 +143,7 @@ describe("ConfigurationParser", () => {
             const parsedLawn = ConfigurationParser.parseLawn("AB");
             assert.isNull(parsedLawn);
         });
-        it("should return a new lawn when called with correct paramters", () => {
+        it("should return a new lawn when called with correct parameters", () => {
             const parsedLawn = ConfigurationParser.parseLawn("56");
             assert.isNotNull(parsedLawn);
             if (parsedLawn) {

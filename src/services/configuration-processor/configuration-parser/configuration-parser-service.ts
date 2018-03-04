@@ -1,9 +1,9 @@
 import {createInterface, ReadLine} from "readline";
 import {Readable} from "stream";
-import {InstructionEnum} from "../../entites/instruction-enum";
-import {ILawn} from "../../entites/lawn";
-import {Mower} from "../../entites/mower/mower";
-import {OrientationEnum} from "../../entites/orientation-enum";
+import {InstructionEnum} from "../../../entites/instruction-enum";
+import {ILawn} from "../../../entites/lawn";
+import {Mower} from "../../../entites/mower/mower";
+import {OrientationEnum} from "../../../entites/orientation-enum";
 
 const LAWN_REGEX = /^[1-9]{2}$/
 const INITIAL_MOWER_REGEX = /^[1-9]{2}[NSEW]$/
@@ -75,20 +75,24 @@ export class ConfigurationParser {
         return result;
     }
 
+    public static create(readStream: Readable) {
+        return new ConfigurationParser(readStream);
+    }
+
     private status = ParserStatusEnum.LAWN;
     private lawn: ILawn;
     private mower: Mower;
     private lineNumber = 0;
 
-    constructor(private readSteam: Readable) {
+    constructor(private readStream: Readable) {
     }
 
     public parse(onMowerInstructions: (mower: Mower, mowerInstructions: InstructionEnum[]) => void,
                  onError?: (errorType: ParserErrorTypeEnum, lineNumber: number) => void,
-                 onDone?: () => void) {
+                 onDone?: (success: boolean) => void) {
 
         const rl: ReadLine = createInterface({
-            input: this.readSteam,
+            input: this.readStream,
         });
 
         let error: ParserErrorTypeEnum | null = null;
@@ -122,7 +126,7 @@ export class ConfigurationParser {
         });
         rl.on("close", () => {
             if (onDone) {
-                onDone();
+                onDone(this.status !== ParserStatusEnum.ERROR);
             }
         });
     }

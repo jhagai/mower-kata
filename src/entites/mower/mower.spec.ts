@@ -1,7 +1,7 @@
 import {assert, expect} from "chai";
 import {InstructionEnum} from "../instruction-enum";
-import {OrientationEnum} from "../orientation-enum";
 import {ILawn} from "../lawn";
+import {OrientationEnum} from "../orientation-enum";
 import {Mower} from "./mower";
 
 const lawn: ILawn = {
